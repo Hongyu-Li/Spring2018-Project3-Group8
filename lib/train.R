@@ -1,37 +1,67 @@
-#########################################################
-### Train a classification model with training images ###
-#########################################################
-
-### Author: Yuting Ma
-### Project 3
-### ADS Spring 2016
-
-
-train <- function(dat_train, label_train, par=NULL){
+gbm_model <- function(data,ntree=NA,shrinkage=NA,interactiondepth=NA){
   
-  ### Train a Gradient Boosting Model (GBM) using processed features from training images
+  ### Train a GBM classifier using features of training images
   
-  ### Input: 
-  ###  -  processed features from images 
-  ###  -  class labels for training images
-  ### Output: training model specification
+  ### Input:
+  ### - training data including features of training images 
+  ###   and class labels of training images
+  ### - parameters(ntree,shrinkage,interactiondepth)
+  ### Output:
+  ### - training gbm model specification
   
   ### load libraries
-  library("gbm")
+  library(gbm)
   
-  ### Train with gradient boosting model
-  if(is.null(par)){
-    depth <- 3
-  } else {
-    depth <- par$depth
+  ### train with GBM
+  if(is.na(ntree) | is.na(shrinkage) | is.na(interactiondepth)){
+    ntree = 100
+    interactiondepth = 1
+    shrinkage = 0.01
   }
-  fit_gbm <- gbm.fit(x=dat_train, y=label_train,
-                     n.trees=2000,
-                     distribution="bernoulli",
-                     interaction.depth=depth, 
-                     bag.fraction = 0.5,
-                     verbose=FALSE)
-  best_iter <- gbm.perf(fit_gbm, method="OOB", plot.it = FALSE)
+  else{
+    ntree = ntree
+    interactiondepth =interactiondepth
+    shrinkage = shrinkage
+  }
+  
+  model<-gbm(y~.,data=data,distribution="multinomial",n.trees=ntree,
+             shrinkage=shrinkage,interaction.depth = interactiondepth,
+             n.minobsinnode = 0)
+  
+  return(model)
+}
 
-  return(list(fit=fit_gbm, iter=best_iter))
+xgboost_model<-function(data,paras=NULL){
+  ### Train a Xgboost classifier using features of training images
+  
+  ### Input:
+  ### - training data including features of training images 
+  ###   and class labels of training images
+  ### - paramters(data.frame contains max_depth, eta, nrounds)
+  ### Output:
+  ### - training Xgboost model specification
+  
+  library(xgboost)
+  
+  if(is.null(paras)){
+    max_depth = 3
+    eta = 0.5
+    min_child_weight = 5
+  } 
+  else {
+    max_depth<-paras['max_depth']
+    eta<-paras['eta']
+    min_child_weight<-paras['min_child_weight']
+  }
+  
+  model<-xgboost(data = data.matrix(data[,-1]),
+                 label = data[,1],
+                 eta = eta,
+                 max_depth = max_depth,
+                 min_child_weight=min_child_weight,
+                 nrounds = 5,   #make model more robust
+                 num_class = 3,
+                 metrics = "merror",
+                 objective = "multi:softmax")
+  return(model)
 }

@@ -1,192 +1,230 @@
 ---
-title: "Project 3 - Example Main Script"
-author: "Yuting Ma, Tian Zheng"
-date: "February 24, 2016"
+title: 'Project 3: Dogs, Fried Chicken or Blueberry Muffins?'
+author: "Hongyu Li"
+date: "March 19, 2018"
 output:
   pdf_document: default
   html_document: default
 ---
-In your final repo, there should be an R markdown file that organizes **all computational steps** for evaluating your proposed image classification framework. 
-
-This file is currently a template for running evaluation experiments of image analysis (or any predictive modeling). You should update it according to your codes but following precisely the same structure. 
 
 ```{r}
-if(!require("EBImage")){
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("EBImage")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this project, we carried out model evaluation and selection for predictive analytics on the image data. We created a classification model for images of poodles, fried chickens, and muffins. For feature extraction method, we tried RGB, SIFT, SURF, HoG and ORB. For classification methods, we tried GBM, Xgboost, SVM with linear and RBF kernels and Random Forest. Moreover, we also tried to combine some dimension reduction methods (PCA, tsne, LLE and ISOMAP) with feature extraction methods to decrease running time. In the end, we chose RGB and Xgboost as our final (advanced) model.
+
+```{r warnings=FALSE,messages=FALSE}
+packages.used=c("EBImage","xgboost","plyr","gbm")
+packages.needed=setdiff(packages.used, intersect(installed.packages()[,1],
+                                                 packages.used))
+if(length(packages.needed)>0){
+  install.packages(packages.needed, dependencies = TRUE)
 }
 
-if(!require("gbm")){
-  install.packages("gbm")
-}
-
-library("EBImage")
-library("gbm")
+library(gbm)
+library(EBImage)
+library(xgboost)
+library(plyr)
 ```
 
 ### Step 0: specify directories.
 
 Set the working directory to the image folder. Specify the training and the testing set. For data without an independent test/validation set, you need to create your own testing data by random subsampling. In order to obain reproducible results, set.seed() whenever randomization is used. 
 
-```{r wkdir, eval=FALSE}
-setwd("./ads_spr2017_proj3") 
-# here replace it with your own path or manually set it in RStudio to where this rmd file is located. 
+
+```{r}
+img_train_dir <- '..//data/train/'  #this is for train features
+img_test_dir <- '..//data/test/'  #this is for test set images
 ```
 
-Provide directories for raw images. Training set and test set should be in different subfolders. 
-```{r}
-experiment_dir <- "../data/zipcode/" # This will be modified for different data sets.
-img_train_dir <- paste(experiment_dir, "train/", sep="")
-img_test_dir <- paste(experiment_dir, "test/", sep="")
-```
+*Note*: While doing the project, we use random sample to split the data into training and test sets rather than put them into different files. To ensure the results are reproducible, set.seed() is used in this project.
+\
+
 
 ### Step 1: set up controls for evaluation experiments.
 
 In this chunk, ,we have a set of controls for the evaluation experiments. 
 
++ (T/F) run advance model(T=advance model; F=baseline model)
 + (T/F) cross-validation on the training set
-+ (number) K, the number of CV folds
-+ (T/F) process features for training set
++ (number) k, the number of CV folds
++ (number) seed, the seed used to ensure results to be reproducible
++ (number) train_p, the proportion of training data, preferable to be between 0.6-0.8
++ (T/F) process RGB features for training set(T=RGB; F=SIFT)
 + (T/F) run evaluation on an independent test set
-+ (T/F) process features for test set
++ (T/F) process RGB features for test set(T=RGB; F=SIFT)
 
 ```{r exp_setup}
+run.adv=FALSE #run advance model 
 run.cv=TRUE # run cross-validation on the training set
-K <- 5  # number of CV folds
-run.feature.train=TRUE # process features for training set
-run.test=TRUE # run evaluation on an independent test set
-run.feature.test=TRUE # process features for test set
+k <- 5  # number of CV folds
+seed <- 123  #random seed
+train_p <- 0.8 #the proportion of training data
+run.feature.train=FALSE # process RGB features for training set
+run.test=FALSE # run evaluation on an independent test set
+run.feature.test=FALSE # process RGB features for test set
 ```
 
-Using cross-validation or independent test set evaluation, we compare the performance of different classifiers or classifiers with different specifications. In this example, we use GBM with different `depth`. In the following chunk, we list, in a vector, setups (in this case, `depth`) corresponding to models that we will compare. In your project, you maybe comparing very different classifiers. You can assign them numerical IDs and labels specific to your project. 
 
-```{r model_setup}
-model_values <- seq(3, 11, 2)
-model_labels = paste("GBM with depth =", model_values)
-```
 
 ### Step 2: import training images class labels.
 
-For the example of zip code digits, we code digit 9 as "1" and digit 7 as "0" for binary classification.
+```{r}
+if (run.adv){
+  label<-read.csv(paste(img_train_dir,'label_train.csv',sep=''),header=T,sep=',')
+  y<-label$label-1  #xgboost label from 0 to num.class
+} else{
+  label<-read.csv(paste(img_train_dir,'label_train.csv',sep=''),header=T,sep=',')
+  y<-as.factor(label$label) 
+}
 
-```{r train_label}
-label_train <- read.table(paste(experiment_dir, "train_label.txt", sep=""),
-                          header=F)
-label_train <- as.numeric(unlist(label_train) == "9")
 ```
 
-### Step 3: construct visual feature
+### Step 3: Preparation for Training Model
 
-For this simple example, we use the row averages of raw pixel values as the visual features. Note that this strategy **only** works for images with the same number of rows. For some other image datasets, the feature function should be able to handle heterogeneous input images. Save the constructed features to the output subfolder.
 
-`feature.R` should be the wrapper for all your feature engineering functions and options. The function `feature( )` should have options that correspond to different scenarios for your project and produces an R object that contains features that are required by all the models you are going to evaluate later. 
-
-```{r feature}
+```{r}
 source("../lib/feature.R")
+```
 
-tm_feature_train <- NA
+
+#### Step 3.1: Extract features
+
+```{r}
 if(run.feature.train){
-  tm_feature_train <- system.time(dat_train <- feature(img_train_dir, 
-                                                       "train", 
-                                                       data_name="zip", 
-                                                       export=TRUE))
+  train.data <- read.csv(paste('..//output/',"rgb_feature.csv",sep = ""), 
+                 header=T, sep=',')[,-1]  
+}else{
+  train.data<- read.csv(paste(img_train_dir,"SIFT_train.csv",sep = ""), 
+                  header=F, sep=',')[,-1]
 }
 
-tm_feature_test <- NA
-if(run.feature.test){
-  tm_feature_test <- system.time(dat_test <- feature(img_test_dir, 
-                                                     "test", 
-                                                     data_name="zip", 
-                                                     export=TRUE))
-}
 
-#save(dat_train, file="./output/feature_train.RData")
-#save(dat_test, file="./output/feature_test.RData")
+if(run.test){
+  if(run.feature.test){
+  tm_feature_test <- system.time(
+    new.data <-RGB_feature(paste(img_test_dir,"images/",sep=""),export=T))
+} else {
+  new.data<-read.csv(paste(img_test_dir,"SIFT_test.csv",sep = ""), 
+                     header=T, sep='')[,-1]
+  }
+}
+```
+
+
+#### Step 3.2: Random split the data to training and testing set
+
+```{r}
+train<-cbind(y,train.data)
+set.seed(seed)
+samp<-sample(1:nrow(train),nrow(train)*train_p)
+train.data<-train[samp,]
+test.data<-train[-samp,]
 ```
 
 ### Step 4: Train a classification model with training images
 Call the train model and test model from library. 
 
-`train.R` and `test.R` should be wrappers for all your model training steps and your classification/prediction steps. 
-+ `train.R`
-  + Input: a path that points to the training set features.
-  + Input: an R object of training sample labels.
-  + Output: an RData file that contains trained classifiers in the forms of R objects: models/settings/links to external trained configurations.
-+ `test.R`
-  + Input: a path that points to the test set features.
-  + Input: an R object that contains a trained classifier.
-  + Output: an R object of class label predictions on the test set. If there are multiple classifiers under evaluation, there should be multiple sets of label predictions. 
+
 ```{r loadlib}
 source("../lib/train.R")
 source("../lib/test.R")
 ```
 
 #### Model selection with cross-validation
-* Do model selection by choosing among different values of training model parameters, that is, the interaction depth for GBM in this example. 
-```{r runcv, message=FALSE, warning=FALSE}
-source("../lib/cross_validation.R")
 
-if(run.cv){
-  err_cv <- array(dim=c(length(model_values), 2))
-  for(k in 1:length(model_values)){
-    cat("k=", k, "\n")
-    err_cv[k,] <- cv.function(dat_train, label_train, model_values[k], K)
+```{r warnings=FALSE,message=FALSE}
+source('../lib/cross_validation.R')
+
+if (run.cv){
+  if (!run.adv){
+    ntrees = c(100,300,500)
+    shrinkages = c(0.01,0.05,0.1)
+    interactiondepths = c(1,3,5)
+    tuned<-cv_gbm(train.data,k,ntrees,shrinkages,interactiondepths)
+  }else{
+    library(caret)
+    xgb_paras<-expand.grid(eta=c(0.01,0.1,0.5),
+                           max_depth=c(1,3),
+                           min_child_weight=c(1,3,5))
+    tuned<-cv_xgboost(train.data,k,xgb_paras)
   }
-  save(err_cv, file="../output/err_cv.RData")
-}
-```
-
-Visualize cross-validation results. 
-
-```{r cv_vis}
-if(run.cv){
-  load("../output/err_cv.RData")
-  #pdf("../fig/cv_results.pdf", width=7, height=5)
-  plot(model_values, err_cv[,1], xlab="Interaction Depth", ylab="CV Error",
-       main="Cross Validation Error", type="n", ylim=c(0, 0.25))
-  points(model_values, err_cv[,1], col="blue", pch=16)
-  lines(model_values, err_cv[,1], col="blue")
-  arrows(model_values, err_cv[,1]-err_cv[,2], model_values, err_cv[,1]+err_cv[,2], 
-        length=0.1, angle=90, code=3)
-  #dev.off()
+}else{
+  if (!run.adv){
+    ntrees = 100
+    shrinkages = 0.01
+    interactiondepths = 1
+    tuned<-cv_gbm(train.data,k,ntrees,shrinkages,interactiondepths)
+  }else{
+    library(caret)
+    xgb_paras<-data.frame(max_depth = 3,
+                          eta = 0.5,
+                          min_child_weight = 5)
+    tuned<-cv_xgboost(train.data,k,xgb_paras)
+  }
 }
 ```
 
 
-* Choose the "best"" parameter value
-```{r best_model}
-model_best=model_values[1]
-if(run.cv){
-  model_best <- model_values[which.min(err_cv[,1])]
-}
+* Get the best parameters and train the model with the entire training set.
 
-par_best <- list(depth=model_best)
-```
-
-* Train the model with the entire training set using the selected model (model parameter) via cross-validation.
-```{r final_train}
-tm_train=NA
-tm_train <- system.time(fit_train <- train(dat_train, label_train, par_best))
-save(fit_train, file="../output/fit_train.RData")
-```
-
-### Step 5: Make prediction 
-Feed the final training model with the completely holdout testing data. 
-```{r test}
-tm_test=NA
-if(run.test){
-  load(file=paste0("../output/feature_", "zip", "_", "test", ".RData"))
-  load(file="../output/fit_train.RData")
-  tm_test <- system.time(pred_test <- test(fit_train, dat_test))
-  save(pred_test, file="../output/pred_test.RData")
+```{r}
+if (!run.adv){
+  cv.error<-tuned$cv.error
+  best.paras<-data.frame(ntree=tuned$ntree,
+                           shrinkage=tuned$shrinkage,
+                           interaction.depth=tuned$interaction.depth)
+  tm_train<-system.time(
+    opt<-gbm_model(train.data,tuned$ntree,tuned$shrinkage,
+                   tuned$interaction.depth))
+  test.error<-gbm_test(opt,test.data)
+}else{
+  cv.error<-tuned$cv.error
+  best.paras<-data.frame(eta=tuned$eta,
+                         max_depth=tuned$max_depth,
+                         min_child_weight=tuned$min_child_weight)
+  tm_train<-system.time(opt<-xgboost_model(train.data,best.paras))
+  test.error<-xgboost_test(opt,test.data)
 }
 ```
 
-### Summarize Running Time
-Prediction performance matters, so does the running times for constructing features and for training the model, especially when the computation resource is limited. 
-```{r running_time}
-cat("Time for constructing training features=", tm_feature_train[1], "s \n")
+
+### Step 5: Evaluation Model 
+
+#### Step 5.1: Get the CV error and test error based on the given 3000 data
+
+```{r}
+cv.error;test.error
+```
+
+
+#### Step 5.2: Make prediction for new testing set
+
+```{r}
+if (!run.adv){
+  best.iter=gbm.perf(opt,method="OOB", plot.it = FALSE)
+  tm_test<-system.time(pred<-predict(opt,new.data,best.iter,type='response'))
+  pred.new=apply(pred,1,which.max)
+}else{
+  tm_test<-system.time(pred.new<-predict(opt,as.matrix(new.data)))
+}
+
+save(pred.new, file="..//output/pred_new.RData")
+```
+
+
+### Summary
+
+#### Running Time
+```{r}
 cat("Time for constructing testing features=", tm_feature_test[1], "s \n")
 cat("Time for training model=", tm_train[1], "s \n")
 cat("Time for making prediction=", tm_test[1], "s \n")
+```
+
+
+#### Error Rate
+```{r}
+cat("CV error rate for given images=",cv.error,'\n')
+cat("Test error rate for given images= ",test.error)
 ```

@@ -1,39 +1,42 @@
-#############################################################
-### Construct visual features for training/testing images ###
-#############################################################
-
-### Authors: Yuting Ma/Tian Zheng
-### Project 3
-### ADS Spring 2017
-
-feature <- function(img_dir, set_name, data_name="data", export=T){
+RGB_feature<-function(img_dir, export=TRUE){
   
   ### Construct process features for training/testing images
-  ### Sample simple feature: Extract row average raw pixel values as features
+  ### RGB: calculate the Frequency of Color Histogram for an image
   
   ### Input: a directory that contains images ready for processing
-  ### Output: an .RData file contains processed features for the images
+  ### Output: an .csv file contains processed features for the images
   
-  ### load libraries
-  library("EBImage")
   
-  n_files <- length(list.files(img_dir))
+  library(EBImage)
+  library(plyr)
+  #define bins of color histogram for each channel
+  nR <- 8 
+  nG <- 8
+  nB <- 8 
+  Rbin <- seq(0, 1, length.out=nR)
+  Gbin <- seq(0, 1, length.out=nG)
+  Bbin <- seq(0, 1, length.out=nB)
+  n_images<- length(list.files(img_dir))
   
-  ### determine img dimensions
-  img0 <-  readImage(paste0(img_dir, "img", "_", data_name, "_", set_name, "_", 1, ".jpg"))
-  mat1 <- as.matrix(img0)
-  n_r <- nrow(img0)
-  
-  ### store vectorized pixel values of images
-  dat <- matrix(NA, n_files, n_r) 
-  for(i in 1:n_files){
-    img <- readImage(paste0(img_dir,  "img", "_", data_name, "_", set_name, "_", i, ".jpg"))
-    dat[i,] <- rowMeans(img)
+  image_hist_count<-function(pos){
+    mat <- imageData(readImage(paste0(img_dir,sprintf("%04.f",pos), ".jpg")))
+    mat_as_rgb <-array(c(mat,mat,mat),dim = c(nrow(mat),ncol(mat),3))
+    count_rgb <- as.data.frame(table(factor(findInterval(mat_as_rgb[,,1], Rbin), levels=1:nR), 
+                                     factor(findInterval(mat_as_rgb[,,2], Gbin), levels=1:nG),
+                                     factor(findInterval(mat_as_rgb[,,3], Bbin), levels=1:nB)))
+    #find frequency in color histogram for specific combination
+    rgb_feature <- as.numeric(count_rgb$Freq)/(nrow(mat)*ncol(mat))  
+    return(rgb_feature)
   }
+  
+  rgb_feature<-ldply(1:n_images,image_hist_count)
   
   ### output constructed features
   if(export){
-    save(dat, file=paste0("../output/feature_", data_name, "_", set_name, ".RData"))
+    write.csv(rgb_feature, file = "..//output/rgb_feature_test.csv")
   }
-  return(dat)
+  return(data.frame(rgb_feature))
 }
+
+
+#rgb<-RGB_feature(paste(img_train_dir,'images/',sep=''),T)

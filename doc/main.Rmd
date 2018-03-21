@@ -1,10 +1,10 @@
 ---
-title: 'Project 3: Dogs, Fried Chicken or Blueberry Muffins?'
+title: "Main"
 author: "Hongyu Li"
 date: "March 19, 2018"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r}
@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 In this project, we carried out model evaluation and selection for predictive analytics on the image data. We created a classification model for images of poodles, fried chickens, and muffins. For feature extraction method, we tried RGB, SIFT, SURF, HoG and ORB. For classification methods, we tried GBM, Xgboost, SVM with linear and RBF kernels and Random Forest. Moreover, we also tried to combine some dimension reduction methods (PCA, tsne, LLE and ISOMAP) with feature extraction methods to decrease running time. In the end, we chose RGB and Xgboost as our final (advanced) model.
 
-```{r warnings=FALSE,messages=FALSE}
+```{r warning=FALSE,message=FALSE}
 packages.used=c("EBImage","xgboost","plyr","gbm")
 packages.needed=setdiff(packages.used, intersect(installed.packages()[,1],
                                                  packages.used))
@@ -55,12 +55,12 @@ In this chunk, ,we have a set of controls for the evaluation experiments.
 + (T/F) process RGB features for test set(T=RGB; F=SIFT)
 
 ```{r exp_setup}
-run.adv=FALSE #run advance model 
+run.adv=TRUE #run advance model 
 run.cv=TRUE # run cross-validation on the training set
 k <- 5  # number of CV folds
 seed <- 123  #random seed
 train_p <- 0.8 #the proportion of training data
-run.feature.train=FALSE # process RGB features for training set
+run.feature.train=TRUE # process RGB features for training set
 run.test=FALSE # run evaluation on an independent test set
 run.feature.test=FALSE # process RGB features for test set
 ```
@@ -133,7 +133,7 @@ source("../lib/test.R")
 
 #### Model selection with cross-validation
 
-```{r warnings=FALSE,message=FALSE}
+```{r warning=FALSE,message=FALSE,include=FALSE}
 source('../lib/cross_validation.R')
 
 if (run.cv){
@@ -151,9 +151,9 @@ if (run.cv){
   }
 }else{
   if (!run.adv){
-    ntrees = 100
+    ntrees = 500
     shrinkages = 0.01
-    interactiondepths = 1
+    interactiondepths = 3
     tuned<-cv_gbm(train.data,k,ntrees,shrinkages,interactiondepths)
   }else{
     library(caret)
@@ -168,7 +168,7 @@ if (run.cv){
 
 * Get the best parameters and train the model with the entire training set.
 
-```{r}
+```{r warning=FALSE,message=FALSE}
 if (!run.adv){
   cv.error<-tuned$cv.error
   best.paras<-data.frame(ntree=tuned$ntree,
@@ -201,15 +201,16 @@ cv.error;test.error
 #### Step 5.2: Make prediction for new testing set
 
 ```{r}
-if (!run.adv){
+if (run.test){
+  if (!run.adv){
   best.iter=gbm.perf(opt,method="OOB", plot.it = FALSE)
   tm_test<-system.time(pred<-predict(opt,new.data,best.iter,type='response'))
   pred.new=apply(pred,1,which.max)
-}else{
+  }else{
   tm_test<-system.time(pred.new<-predict(opt,as.matrix(new.data)))
+  }
+  save(pred.new, file="..//output/pred_new.RData")
 }
-
-save(pred.new, file="..//output/pred_new.RData")
 ```
 
 
@@ -217,9 +218,14 @@ save(pred.new, file="..//output/pred_new.RData")
 
 #### Running Time
 ```{r}
-cat("Time for constructing testing features=", tm_feature_test[1], "s \n")
-cat("Time for training model=", tm_train[1], "s \n")
-cat("Time for making prediction=", tm_test[1], "s \n")
+if(run.test){
+  cat("Time for constructing testing features=", tm_feature_test[1], "s \n")
+  cat("Time for training model=", tm_train[1], "s \n")
+  cat("Time for making prediction=", tm_test[1], "s \n")
+}else{
+  cat("Time for training model=", tm_train[1], "s \n")
+}
+
 ```
 
 

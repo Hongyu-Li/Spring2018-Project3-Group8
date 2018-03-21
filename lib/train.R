@@ -14,8 +14,8 @@ gbm_model <- function(data,ntree=NA,shrinkage=NA,interactiondepth=NA){
   
   ### train with GBM
   if(is.na(ntree) | is.na(shrinkage) | is.na(interactiondepth)){
-    ntree = 100
-    interactiondepth = 1
+    ntree = 500
+    interactiondepth = 5
     shrinkage = 0.01
   }
   else{

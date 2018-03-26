@@ -48,9 +48,9 @@ In this project, we created a classification engine for images of Dogs, images o
         + Performed PCA, TSNE, LLE and ISOMAP on the feature data to reduce dimension 
         and trained model with feature data after processing.
         
-        +Trained Xgboost based on SIFT, RGB, HoG, ORB and SURF.
+        + Trained Xgboost based on SIFT, RGB, HoG, ORB and SURF.
         
-        +Completed main.rmd, feature.R, train.R, test.R and cross_validation.R.
+        + Completed main.rmd, feature.R, train.R, test.R and cross_validation.R.
         
 + Zheng, Jia 
         

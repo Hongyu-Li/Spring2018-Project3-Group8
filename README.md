@@ -22,7 +22,7 @@ In this project, we created a classification engine for images of Dogs, images o
 
 ![image](figs/summary.png)
      
- Summary for model performance are shown in detail in [summary](output/summary.html), we can see that XGboost+RGB has similar accuracy as RF+RGB but it takes less time.
+ Summary for model performance are shown in detail in [summary](http://www.columbia.edu/~hl3099/summary.html), we can see that XGboost+RGB has similar accuracy as RF+RGB but it takes less time.
 
  	
 **Contribution statement**:

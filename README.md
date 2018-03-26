@@ -22,36 +22,36 @@ In this project, we created a classification engine for images of Dogs, images o
 
 ![image](figs/summary.png)
      
- Summary for model performance are shown in detail in (output/summary.html), we can see that XGboost+RGB has similar accuracy as RF+RGB but it takes less time.
+ Summary for model performance are shown in detail in [summary](output/summary.html), we can see that XGboost+RGB has similar accuracy as RF+RGB but it takes less time.
 
  	
 **Contribution statement**:
 
 + Dong, Jiaqi
-
-        + Train and test Random Forest model based on SIFT, HOG, RGB and ORB (pick the best parameter of Random Forest model, test using cross validation) 
-        
+             
 	+ Generate README.md
-	
+	+ Train and test Random Forest model based on SIFT, HOG, RGB and ORB 
+	+ Pick the best parameter of Random Forest model, test using cross validation
+         
 + Fan, Xiaochen          
 
 	+ Make the PPT and give the presentation
 	
-+ Li, Hongyu 
-               
-        + Built baseline model(GBM with SIFT).
-        
-        + Built RGB and HoG feature extraction function.
-        
-        + Trained GBM based on SIFT, RGB, HoG, ORB and SURF.
-        
-        + Performed PCA, TSNE, LLE and ISOMAP on the feature data to reduce dimension 
++ Li, Hongyu 	
+
+	+ Built baseline model(GBM with SIFT).
+	
+	+ Built RGB and HoG feature extraction function.
+
+	+ Trained GBM based on SIFT, RGB, HoG, ORB and SURF.
+	
+	+ Trained Xgboost based on SIFT, RGB, HoG, ORB and SURF.
+	
+	+ Performed PCA, TSNE, LLE and ISOMAP on the feature data to reduce dimension 
         and trained model with feature data after processing.
         
-        + Trained Xgboost based on SIFT, RGB, HoG, ORB and SURF.
-        
         + Completed main.rmd, feature.R, train.R, test.R and cross_validation.R.
-        
+	
 + Zheng, Jia 
         
 	+ Applied rbf-kernel SVM model to classification problem. 

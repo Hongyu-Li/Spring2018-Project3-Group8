@@ -29,8 +29,8 @@ In this project, we created a classification engine for images of Dogs, images o
 
 + Dong, Jiaqi
 
-        + Train and test Random Forest model based on SIFT, HOG, RGB and ORB   
-	(pick the best parameter of Random Forest model, test using cross validation) 
+        + Train and test Random Forest model based on SIFT, HOG, RGB and ORB (pick the best parameter of Random Forest model, test using cross validation) 
+        
 	+ Generate README.md
 	
 + Fan, Xiaochen          
@@ -40,19 +40,27 @@ In this project, we created a classification engine for images of Dogs, images o
 + Li, Hongyu 
                
         + Built baseline model(GBM with SIFT).
+        
         + Built RGB and HoG feature extraction function.
+        
         + Trained GBM based on SIFT, RGB, HoG, ORB and SURF.
+        
         + Performed PCA, TSNE, LLE and ISOMAP on the feature data to reduce dimension 
         and trained model with feature data after processing.
+        
         +Trained Xgboost based on SIFT, RGB, HoG, ORB and SURF.
+        
         +Completed main.rmd, feature.R, train.R, test.R and cross_validation.R.
         
 + Zheng, Jia 
         
-	+Applied rbf-kernel SVM model to classification problem. 
-	+Constructed feature data for each image using bag-of-words strategy after SIFT, SURF, ORB, RGB, HOG feature extraction and mini-batch kmeans clustering. 
-	+Conducted cross validation of C and gamma parameters and trained model using selected tuning parameters. 
-	+Tested model in seperate five cases and summarized the time cost and error using bar plot.
+	+ Applied rbf-kernel SVM model to classification problem. 
+	
+	+ Constructed feature data for each image using bag-of-words strategy after SIFT, SURF, ORB, RGB, HOG feature extraction and mini-batch kmeans clustering. 
+	
+	+ Conducted cross validation of C and gamma parameters and trained model using selected tuning parameters. 
+	
+	+ Tested model in seperate five cases and summarized the time cost and error using bar plot.
 
 
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.

@@ -9,7 +9,6 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="Group 8" />
 
 <meta name="date" content="2018-03-19" />
 
@@ -120,7 +119,6 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Main</h1>
-<h4 class="author"><em>Group 8</em></h4>
 <h4 class="date"><em>March 19, 2018</em></h4>
 
 </div>
@@ -262,7 +260,7 @@ source(&quot;../lib/test.R&quot;)</code></pre>
   tm_test&lt;-system.time(pred&lt;-predict(opt,new.data,best.iter,type='response'))
   pred.new=apply(pred,1,which.max)
   }else{
-  tm_test&lt;-system.time(pred.new&lt;-predict(opt,as.matrix(new.data)))
+  tm_test&lt;-system.time(pred.new&lt;-predict(opt,as.matrix(new.data))+1)
   }
   save(pred.new, file=&quot;..//output/pred_new.RData&quot;)
 }</code></pre>

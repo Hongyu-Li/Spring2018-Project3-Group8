@@ -1,10 +1,10 @@
 ---
 title: "Main"
-author: "Hongyu Li"
-date: "March 19, 2018"
+author: Hongyu Li
 output:
   html_document: default
   pdf_document: default
+date: "March 19, 2018"
 ---
 
 ```{r}
@@ -207,7 +207,7 @@ if (run.test){
   tm_test<-system.time(pred<-predict(opt,new.data,best.iter,type='response'))
   pred.new=apply(pred,1,which.max)
   }else{
-  tm_test<-system.time(pred.new<-predict(opt,as.matrix(new.data)))
+  tm_test<-system.time(pred.new<-predict(opt,as.matrix(new.data))+1)
   }
   save(pred.new, file="..//output/pred_new.RData")
 }

@@ -30,12 +30,18 @@ In this project, we created a classification engine for images of Dogs, images o
 + Dong, Jiaqi
              
 	+ Generate README.md
+	
 	+ Train and test Random Forest model based on SIFT, HOG, RGB and ORB 
+	
 	+ Pick the best parameter of Random Forest model, test using cross validation
          
 + Fan, Xiaochen          
 
-	+ Make the PPT and give the presentation
+	+ Make the presentation PPT and give the presentation
+	
+	+ Summarize the analysis results
+	
+	+ Compare the characteristics of different methods of feature extraction and models
 	
 + Li, Hongyu 	
 

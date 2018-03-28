@@ -106,7 +106,7 @@ if(run.test){
     new.data <-RGB_feature(paste(img_test_dir,"images/",sep=""),export=T))
 } else {
   new.data<-read.csv(paste(img_test_dir,"SIFT_test.csv",sep = ""), 
-                     header=T, sep='')[,-1]
+                     header=F, sep=',')[,-1]
   }
 }
 ```

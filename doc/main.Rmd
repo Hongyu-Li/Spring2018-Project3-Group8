@@ -1,10 +1,10 @@
 ---
 title: "Main"
-author: Hongyu Li
+author: "Hongyu Li"
+date: "March 19, 2018"
 output:
   html_document: default
   pdf_document: default
-date: "March 19, 2018"
 ---
 
 ```{r}
@@ -56,7 +56,7 @@ In this chunk, ,we have a set of controls for the evaluation experiments.
 
 ```{r exp_setup}
 run.adv=TRUE #run advance model 
-run.cv=TRUE # run cross-validation on the training set
+run.cv=FALSE # run cross-validation on the training set
 k <- 5  # number of CV folds
 seed <- 123  #random seed
 train_p <- 0.8 #the proportion of training data
@@ -105,7 +105,7 @@ if(run.test){
   tm_feature_test <- system.time(
     new.data <-RGB_feature(paste(img_test_dir,"images/",sep=""),export=T))
 } else {
-  new.data<-read.csv(paste(img_test_dir,"SIFT_test.csv",sep = ""), 
+  new.data<-read.csv(paste(img_test_dir,"SIFT_test.csv",sep=""), 
                      header=F, sep=',')[,-1]
   }
 }

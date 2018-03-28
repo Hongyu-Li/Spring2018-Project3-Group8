@@ -9,6 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
+<meta name="author" content="Hongyu Li" />
 
 <meta name="date" content="2018-03-19" />
 
@@ -119,6 +120,7 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Main</h1>
+<h4 class="author"><em>Hongyu Li</em></h4>
 <h4 class="date"><em>March 19, 2018</em></h4>
 
 </div>
@@ -159,7 +161,7 @@ img_test_dir &lt;- '..//data/test/'  #this is for test set images</code></pre>
 <li>(T/F) process RGB features for test set(T=RGB; F=SIFT)</li>
 </ul>
 <pre class="r"><code>run.adv=TRUE #run advance model 
-run.cv=TRUE # run cross-validation on the training set
+run.cv=FALSE # run cross-validation on the training set
 k &lt;- 5  # number of CV folds
 seed &lt;- 123  #random seed
 train_p &lt;- 0.8 #the proportion of training data
@@ -196,8 +198,8 @@ if(run.test){
   tm_feature_test &lt;- system.time(
     new.data &lt;-RGB_feature(paste(img_test_dir,&quot;images/&quot;,sep=&quot;&quot;),export=T))
 } else {
-  new.data&lt;-read.csv(paste(img_test_dir,&quot;SIFT_test.csv&quot;,sep = &quot;&quot;), 
-                     header=T, sep='')[,-1]
+  new.data&lt;-read.csv(paste(img_test_dir,&quot;SIFT_test.csv&quot;,sep=&quot;&quot;), 
+                     header=F, sep=',')[,-1]
   }
 }</code></pre>
 </div>
@@ -277,7 +279,7 @@ source(&quot;../lib/test.R&quot;)</code></pre>
 }else{
   cat(&quot;Time for training model=&quot;, tm_train[1], &quot;s \n&quot;)
 }</code></pre>
-<pre><code>## Time for training model= 0.81 s</code></pre>
+<pre><code>## Time for training model= 1.33 s</code></pre>
 </div>
 <div id="error-rate" class="section level4">
 <h4>Error Rate</h4>
